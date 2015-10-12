@@ -1,0 +1,8 @@
+C:\Users\Johnson\Source\Repos\notepad++plugin\MyNppPlugin1\MyNppPlugin1\obj\x86\Debug\NppSDPlugin.csprojResolveAssemblyReference.cache
+C:\Users\Johnson\Source\Repos\notepad++plugin\MyNppPlugin1\MyNppPlugin1\obj\x86\Debug\NppSDPlugin.Properties.Resources.resources
+C:\Users\Johnson\Source\Repos\notepad++plugin\MyNppPlugin1\MyNppPlugin1\obj\x86\Debug\NppSDPlugin.csproj.GenerateResource.Cache
+C:\Users\Johnson\Source\Repos\notepad++plugin\MyNppPlugin1\MyNppPlugin1\bin\Debug\NppSDPlugin.dll
+C:\Users\Johnson\Source\Repos\notepad++plugin\MyNppPlugin1\MyNppPlugin1\bin\Debug\NppSDPlugin.pdb
+C:\Users\Johnson\Source\Repos\notepad++plugin\MyNppPlugin1\MyNppPlugin1\obj\x86\Debug\NppSDPlugin.frmSetRoot.resources
+C:\Users\Johnson\Source\Repos\notepad++plugin\MyNppPlugin1\MyNppPlugin1\obj\x86\Debug\NppSDPlugin.dll
+C:\Users\Johnson\Source\Repos\notepad++plugin\MyNppPlugin1\MyNppPlugin1\obj\x86\Debug\NppSDPlugin.pdb
