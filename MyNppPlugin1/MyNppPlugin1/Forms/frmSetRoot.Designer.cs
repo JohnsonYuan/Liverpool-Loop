@@ -82,6 +82,7 @@
             this.Controls.Add(this.btnBrowser);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "frmSetRoot";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Set Branch Root Path";
             this.ResumeLayout(false);
             this.PerformLayout();
