@@ -3,7 +3,6 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <Platform Condition=" '$(Platform)' == 'Release' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{E56F6E12-089C-40ED-BCFD-923E5FA121A1}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -11,11 +10,12 @@
     <RootNamespace>NppSDPlugin</RootNamespace>
     <AssemblyName>NppSDPlugin</AssemblyName>
     <OutputPath>bin\Debug\</OutputPath>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,10 +37,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DllExport\DllExportAttribute.cs" />
@@ -60,6 +58,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="UnmanagedExports.cs" />
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Forms\frmSetRoot.resx">
@@ -81,8 +80,8 @@
   </Target>
   -->
   <Target Name="Demo">
-  <Message Text="The config is $(Configuration)" />
-  <Message Text="The OutputPath is $(OutputPath)" />
-  <Message Text="The DebugType is $(DebugType)" />
+    <Message Text="The config is $(Configuration)" />
+    <Message Text="The OutputPath is $(OutputPath)" />
+    <Message Text="The DebugType is $(DebugType)" />
   </Target>
 </Project>

@@ -34,9 +34,11 @@ namespace NppSDPlugin
             StringBuilder sbRootPath = new StringBuilder(Win32.MAX_PATH);
             Win32.GetPrivateProfileString("BranchConfig", "RootPath", "", sbRootPath, Win32.MAX_PATH, iniFilePath);
 
-            PluginBase.SetCommand(0, "sd edit", sdEdit, new ShortcutKey(false, false, false, Keys.None));
+            PluginBase.SetCommand(0, "sd edit", sdEdit, new ShortcutKey(true, false, true, Keys.S));
             PluginBase.SetCommand(1, "sd revert", sdRevert);
-            PluginBase.SetCommand(2, "set root path", setBranchRoot); idMyDlg = 1;
+            PluginBase.SetCommand(2, "sd force revert", sdForceRevert);
+            PluginBase.SetCommand(3, "set root path", setBranchRoot); idMyDlg = 1;
+
         }
         internal static void SetToolBarIcon()
         {
@@ -68,7 +70,7 @@ namespace NppSDPlugin
                 if (frmSetRoot.ShowDialog() == DialogResult.OK)
                 {
                     Win32.WritePrivateProfileString("BranchConfig", "RootPath", frmSetRoot.SelectedPath, iniFilePath);
-                    branchRootPath = frmSetRoot.SelectedPath;
+                    Util.BranchRootPath = branchRootPath = frmSetRoot.SelectedPath;
                 }
             }
         }
@@ -76,19 +78,28 @@ namespace NppSDPlugin
         {
             PromoptSelectBranchRoot(branchRootPath);
 
+            string msg = null;
+            Util.SdCheckoutFile(GetCurrentFilePath(), ref msg);
+
+            //Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_SETTEXT, 0, branchRootPath + "\t" + sbFilePath);
+        }
+
+        private static string GetCurrentFilePath()
+        {
             // get current file path
             StringBuilder sbFilePath = new StringBuilder(Win32.MAX_PATH);
             Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLCURRENTPATH, 0, sbFilePath);
 
             // Open a new document
-            Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_MENUCOMMAND, 0, NppMenuCmd.IDM_FILE_NEW);
+            //Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_MENUCOMMAND, 0, NppMenuCmd.IDM_FILE_NEW);
 
-            Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_SETTEXT, 0, branchRootPath + "\t" + sbFilePath);
+            return sbFilePath.ToString();
         }
         internal static void sdRevert()
         {
             PromoptSelectBranchRoot(branchRootPath);
-
+            string msg = null;
+            Util.SdRevertFile(GetCurrentFilePath(), false, ref msg);
             //if (frmMyDlg == null)
             //{
             //    frmMyDlg = new frmMyDlg();
@@ -122,6 +133,13 @@ namespace NppSDPlugin
             //{
             //    Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DMMSHOW, 0, frmMyDlg.Handle);
             //}
+        }
+
+        internal static void sdForceRevert()
+        {
+            PromoptSelectBranchRoot(branchRootPath);
+            string msg = null;
+            Util.SdRevertFile(GetCurrentFilePath(), true, ref msg);
         }
         internal static void setBranchRoot()
         {
