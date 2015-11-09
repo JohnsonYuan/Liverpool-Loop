@@ -13,8 +13,9 @@ namespace NppSDPlugin
     {
         #region " Fields "
         internal const string PluginName = "TTS SD Command";
+        internal const string PluginRootPathKey = "BranchRoot";
         static string iniFilePath = null;
-        static string branchRootPath = null;
+        static string BanchRootPath = null;
         static frmSetRoot frmSetRoot = null;
         static int idMyDlg = -1;
         static Bitmap tbBmp = Properties.Resources.star;
@@ -31,8 +32,10 @@ namespace NppSDPlugin
             if (!Directory.Exists(iniFilePath)) Directory.CreateDirectory(iniFilePath);
             iniFilePath = Path.Combine(iniFilePath, PluginName + ".ini");
 
+            // get branch root path
             StringBuilder sbRootPath = new StringBuilder(Win32.MAX_PATH);
-            Win32.GetPrivateProfileString("BranchConfig", "RootPath", "", sbRootPath, Win32.MAX_PATH, iniFilePath);
+            Win32.GetPrivateProfileString(PluginName, PluginRootPathKey, "", sbRootPath, Win32.MAX_PATH, iniFilePath);
+            BanchRootPath = sbRootPath.ToString();
 
             PluginBase.SetCommand(0, "sd edit", sdEdit, new ShortcutKey(true, false, true, Keys.S));
             PluginBase.SetCommand(1, "sd revert", sdRevert);
@@ -51,7 +54,7 @@ namespace NppSDPlugin
         }
         internal static void PluginCleanUp()
         {
-            Win32.WritePrivateProfileString("BranchConfig", "RootPath", branchRootPath, iniFilePath);
+            Win32.WritePrivateProfileString(PluginName, PluginRootPathKey, BanchRootPath, iniFilePath);
         }
         #endregion
 
@@ -59,8 +62,8 @@ namespace NppSDPlugin
 
         private static void PromoptSelectBranchRoot(string iniPath, bool forceSet = false)
         {
-            if (forceSet || (String.IsNullOrEmpty(branchRootPath)
-                   || !Directory.Exists(branchRootPath)))
+            if (forceSet || (String.IsNullOrEmpty(BanchRootPath)
+                   || !Directory.Exists(BanchRootPath)))
             {
                 if (frmSetRoot == null)
                 {
@@ -69,17 +72,17 @@ namespace NppSDPlugin
 
                 if (frmSetRoot.ShowDialog() == DialogResult.OK)
                 {
-                    Win32.WritePrivateProfileString("BranchConfig", "RootPath", frmSetRoot.SelectedPath, iniFilePath);
-                    Util.BranchRootPath = branchRootPath = frmSetRoot.SelectedPath;
+                    Win32.WritePrivateProfileString(PluginName, PluginRootPathKey, frmSetRoot.SelectedPath, iniFilePath);
+                    BanchRootPath = frmSetRoot.SelectedPath;
                 }
             }
         }
         internal static void sdEdit()
         {
-            PromoptSelectBranchRoot(branchRootPath);
+            PromoptSelectBranchRoot(BanchRootPath);
 
             string msg = null;
-            Util.SdCheckoutFile(GetCurrentFilePath(), ref msg);
+            Util.SdCheckoutFile(BanchRootPath, GetCurrentFilePath(), ref msg);
 
             //Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_SETTEXT, 0, branchRootPath + "\t" + sbFilePath);
         }
@@ -97,9 +100,9 @@ namespace NppSDPlugin
         }
         internal static void sdRevert()
         {
-            PromoptSelectBranchRoot(branchRootPath);
+            PromoptSelectBranchRoot(BanchRootPath);
             string msg = null;
-            Util.SdRevertFile(GetCurrentFilePath(), false, ref msg);
+            Util.SdRevertFile(BanchRootPath, GetCurrentFilePath(), ref msg);
             //if (frmMyDlg == null)
             //{
             //    frmMyDlg = new frmMyDlg();
@@ -137,13 +140,13 @@ namespace NppSDPlugin
 
         internal static void sdForceRevert()
         {
-            PromoptSelectBranchRoot(branchRootPath);
+            PromoptSelectBranchRoot(BanchRootPath);
             string msg = null;
-            Util.SdRevertFile(GetCurrentFilePath(), true, ref msg);
+            Util.SdRevertFile(BanchRootPath, GetCurrentFilePath(), ref msg);
         }
         internal static void setBranchRoot()
         {
-            PromoptSelectBranchRoot(branchRootPath, true);
+            PromoptSelectBranchRoot(BanchRootPath, true);
         }
         #endregion
     }
