@@ -43,9 +43,12 @@ namespace NppSDPlugin
                 MessageBox.Show("The directory not exist, please select again!");
                 return;
             }
-            this.SelectedPath = tbxPath.Text.Trim();
-            this.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.Hide();
+            else 
+            {
+                this.SelectedPath = path;
+                this.DialogResult = System.Windows.Forms.DialogResult.OK;
+                this.Hide();
+            }
         }
 
         private void tbxPath_TextChanged(object sender, EventArgs e)

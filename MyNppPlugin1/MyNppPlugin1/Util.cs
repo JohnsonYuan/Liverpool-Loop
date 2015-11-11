@@ -13,12 +13,12 @@ namespace NppSDPlugin
         private const string SDPath = @"tools\coretools\sd.exe";
         
         /// <summary>
-        /// cmd.exe /c set inetroot=D:\Enlistments\IPESpeechCore_Dev&set corextbranch=IPESpeechCore_Dev&D:\Enlistments\IPESpeechCore_Dev\tools\path1st\myenv.cmd&D:\Enlistments\IPESpeechCore_Dev\private\dev\speech\tts\shenzhou\build\tools\nightlybuild.cmd
+        /// sd edit file
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="message"></param>
-        public static void SdCheckoutFile(string branchRootPath, string filePath, ref string message)
+        /// <param name="filePath">file path</param>
+        public static void SdCheckoutFile(string branchRootPath, string filePath)
         {
+            string message;
             if (filePath.IndexOf(branchRootPath) != 0)
             {
                 MessageBox.Show("Cannot sd edit file not in branch!");
@@ -47,8 +47,14 @@ namespace NppSDPlugin
             }
         }
 
-        public static void SdRevertFile(string branchRootPath, string filePath, ref string message)
+        /// <summary>
+        /// sd revert file
+        /// </summary>
+        /// <param name="branchRootPath"></param>
+        /// <param name="filePath"></param>
+        public static void SdRevertFile(string branchRootPath, string filePath)
         {
+            string message;
             if (filePath.IndexOf(branchRootPath) != 0)
             {
                 MessageBox.Show("Cannot sd revert file not in branch!");

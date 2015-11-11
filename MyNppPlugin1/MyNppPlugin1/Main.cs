@@ -9,10 +9,18 @@ using NppPluginNET;
 
 namespace NppSDPlugin
 {
+    struct ShortCutConfig
+    {
+        public string ConfigKeyName;
+        public Keys ShortKey;
+        public bool IsCtrl;
+        public bool IsAlt;
+        public bool IsShift;
+    }
     class Main
     {
         #region " Fields "
-        internal const string PluginName = "TTS SD Command";
+        internal const string PluginName = "TTS_SD_Command";
         internal const string PluginRootPathKey = "BranchRoot";
         static string iniFilePath = null;
         static string BanchRootPath = null;
@@ -20,7 +28,10 @@ namespace NppSDPlugin
         static int idMyDlg = -1;
         static Bitmap tbBmp = Properties.Resources.star;
         static Bitmap tbBmp_tbTab = Properties.Resources.star_bmp;
-        static Icon tbIcon = null;
+        //static Icon tbIcon = null;
+
+        static ShortCutConfig sdEditConfig = new ShortCutConfig { ConfigKeyName = "SD edit Shortcut", ShortKey = Keys.S, IsCtrl = true, IsAlt = true };
+        static ShortCutConfig sdRevertConfig = new ShortCutConfig { ConfigKeyName = "SD revert Shortcut", ShortKey = Keys.None };
         #endregion
 
         #region " StartUp/CleanUp "
@@ -33,15 +44,16 @@ namespace NppSDPlugin
             iniFilePath = Path.Combine(iniFilePath, PluginName + ".ini");
 
             // get branch root path
-            StringBuilder sbRootPath = new StringBuilder(Win32.MAX_PATH);
-            Win32.GetPrivateProfileString(PluginName, PluginRootPathKey, "", sbRootPath, Win32.MAX_PATH, iniFilePath);
-            BanchRootPath = sbRootPath.ToString();
+            StringBuilder sbTemp = new StringBuilder(Win32.MAX_PATH);
+            Win32.GetPrivateProfileString(PluginName, PluginRootPathKey, "", sbTemp, Win32.MAX_PATH, iniFilePath);
+            BanchRootPath = sbTemp.ToString();
+            SetShortCut(ref sdEditConfig);
+            SetShortCut(ref sdRevertConfig);
 
-            PluginBase.SetCommand(0, "sd edit", sdEdit, new ShortcutKey(true, false, true, Keys.S));
-            PluginBase.SetCommand(1, "sd revert", sdRevert);
-            PluginBase.SetCommand(2, "sd force revert", sdForceRevert);
-            PluginBase.SetCommand(3, "set root path", setBranchRoot); idMyDlg = 1;
-
+            PluginBase.SetCommand(0, "sd edit", SDEdit, new ShortcutKey(sdEditConfig.IsCtrl, sdEditConfig.IsAlt, sdEditConfig.IsShift, sdEditConfig.ShortKey));
+            PluginBase.SetCommand(1, "sd revert", SDRevert, new ShortcutKey(sdRevertConfig.IsCtrl, sdRevertConfig.IsAlt, sdRevertConfig.IsShift, sdRevertConfig.ShortKey));
+            PluginBase.SetCommand(3, "set root path", SetBranchRoot);
+            idMyDlg = 1;
         }
         internal static void SetToolBarIcon()
         {
@@ -60,94 +72,134 @@ namespace NppSDPlugin
 
         #region " Menu functions "
 
-        private static void PromoptSelectBranchRoot(string iniPath, bool forceSet = false)
+        /// <summary>
+        /// Set shortcut config
+        /// </summary>
+        /// <param name="config">config object</param>
+        private static void SetShortCut(ref ShortCutConfig config)
+        {
+            StringBuilder sbTemp = new StringBuilder(10);
+
+            try
+            {
+                Win32.GetPrivateProfileString(config.ConfigKeyName, "ShortKey", "", sbTemp, Win32.MAX_PATH, iniFilePath);
+                if (sbTemp.Length > 0)
+                {
+                    config.ShortKey = (Keys)Enum.Parse(typeof(Keys), sbTemp.ToString());
+                }
+                else
+                {
+                    if (config.ShortKey != Keys.None)
+                    {
+                        Win32.WritePrivateProfileString(config.ConfigKeyName, "ShortKey", config.ShortKey.ToString(), iniFilePath);
+                    }
+                }
+
+                Win32.GetPrivateProfileString(config.ConfigKeyName, "IsCtrl", "", sbTemp, Win32.MAX_PATH, iniFilePath);
+                if (sbTemp.Length > 0)
+                {
+                    config.IsCtrl = (int)Enum.Parse(typeof(int), sbTemp.ToString()) != 0;
+                }
+                else
+                {
+                    Win32.WritePrivateProfileString(config.ConfigKeyName, "IsCtrl", config.IsCtrl ? "" : "0", iniFilePath);
+                }
+
+                Win32.GetPrivateProfileString(config.ConfigKeyName, "IsAlt", "", sbTemp, Win32.MAX_PATH, iniFilePath);
+                if (sbTemp.Length > 0)
+                {
+                    config.IsAlt = (int)Enum.Parse(typeof(int), sbTemp.ToString()) != 0;
+                }
+                else
+                {
+                    Win32.WritePrivateProfileString(config.ConfigKeyName, "IsAlt", config.IsAlt ? "1" : "0", iniFilePath);
+                }
+
+                Win32.GetPrivateProfileString(config.ConfigKeyName, "IsShift", "", sbTemp, Win32.MAX_PATH, iniFilePath);
+                if (sbTemp.Length > 0)
+                {
+                    config.IsShift = (int)Enum.Parse(typeof(int), sbTemp.ToString()) != 0;
+                }
+                else
+                {
+                    Win32.WritePrivateProfileString(config.ConfigKeyName, "IsShift", config.IsShift ? "1" : "0", iniFilePath);
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// Promopt user set the branch root path
+        /// </summary>
+        /// <param name="initPath">init branch root path</param>
+        /// <param name="forceSet">force to reset path</param>
+        /// <returns>success or not</returns>
+        private static bool PromoptSelectBranchRoot(string initPath, bool forceSet = false)
         {
             if (forceSet || (String.IsNullOrEmpty(BanchRootPath)
                    || !Directory.Exists(BanchRootPath)))
             {
                 if (frmSetRoot == null)
                 {
-                    frmSetRoot = new frmSetRoot(iniPath);
+                    frmSetRoot = new frmSetRoot(initPath);
                 }
 
                 if (frmSetRoot.ShowDialog() == DialogResult.OK)
                 {
                     Win32.WritePrivateProfileString(PluginName, PluginRootPathKey, frmSetRoot.SelectedPath, iniFilePath);
                     BanchRootPath = frmSetRoot.SelectedPath;
+                    return true;
                 }
             }
+            return false;
         }
-        internal static void sdEdit()
+
+        /// <summary>
+        /// sd edit file
+        /// </summary>
+        private static void SDEdit()
         {
-            PromoptSelectBranchRoot(BanchRootPath);
-
-            string msg = null;
-            Util.SdCheckoutFile(BanchRootPath, GetCurrentFilePath(), ref msg);
-
-            //Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_SETTEXT, 0, branchRootPath + "\t" + sbFilePath);
+            if (PromoptSelectBranchRoot(BanchRootPath))
+            {
+                Util.SdCheckoutFile(BanchRootPath, GetCurrentFilePath());
+            }
         }
 
+        /// <summary>
+        /// sd revert file
+        /// </summary>
+        private static void SDRevert()
+        {
+            if (PromoptSelectBranchRoot(BanchRootPath))
+            {
+                Util.SdRevertFile(BanchRootPath, GetCurrentFilePath());
+            }
+        }
+
+        /// <summary>
+        /// Set branch root path
+        /// </summary>
+        private static void SetBranchRoot()
+        {
+            PromoptSelectBranchRoot(BanchRootPath, true);
+        }
+
+        /// <summary>
+        /// Get current opened file path
+        /// </summary>
+        /// <returns></returns>
         private static string GetCurrentFilePath()
         {
             // get current file path
             StringBuilder sbFilePath = new StringBuilder(Win32.MAX_PATH);
             Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLCURRENTPATH, 0, sbFilePath);
 
-            // Open a new document
-            //Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_MENUCOMMAND, 0, NppMenuCmd.IDM_FILE_NEW);
-
             return sbFilePath.ToString();
         }
-        internal static void sdRevert()
-        {
-            PromoptSelectBranchRoot(BanchRootPath);
-            string msg = null;
-            Util.SdRevertFile(BanchRootPath, GetCurrentFilePath(), ref msg);
-            //if (frmMyDlg == null)
-            //{
-            //    frmMyDlg = new frmMyDlg();
 
-            //    using (Bitmap newBmp = new Bitmap(16, 16))
-            //    {
-            //        Graphics g = Graphics.FromImage(newBmp);
-            //        ColorMap[] colorMap = new ColorMap[1];
-            //        colorMap[0] = new ColorMap();
-            //        colorMap[0].OldColor = Color.Fuchsia;
-            //        colorMap[0].NewColor = Color.FromKnownColor(KnownColor.ButtonFace);
-            //        ImageAttributes attr = new ImageAttributes();
-            //        attr.SetRemapTable(colorMap);
-            //        g.DrawImage(tbBmp_tbTab, new Rectangle(0, 0, 16, 16), 0, 0, 16, 16, GraphicsUnit.Pixel, attr);
-            //        tbIcon = Icon.FromHandle(newBmp.GetHicon());
-            //    }
-
-            //    NppTbData _nppTbData = new NppTbData();
-            //    _nppTbData.hClient = frmMyDlg.Handle;
-            //    _nppTbData.pszName = "My dockable dialog";
-            //    _nppTbData.dlgID = idMyDlg;
-            //    _nppTbData.uMask = NppTbMsg.DWS_DF_CONT_RIGHT | NppTbMsg.DWS_ICONTAB | NppTbMsg.DWS_ICONBAR;
-            //    _nppTbData.hIconTab = (uint)tbIcon.Handle;
-            //    _nppTbData.pszModuleName = PluginName;
-            //    IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
-            //    Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
-
-            //    Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
-            //}
-            //else
-            //{
-            //    Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DMMSHOW, 0, frmMyDlg.Handle);
-            //}
-        }
-
-        internal static void sdForceRevert()
-        {
-            PromoptSelectBranchRoot(BanchRootPath);
-            string msg = null;
-            Util.SdRevertFile(BanchRootPath, GetCurrentFilePath(), ref msg);
-        }
-        internal static void setBranchRoot()
-        {
-            PromoptSelectBranchRoot(BanchRootPath, true);
-        }
         #endregion
     }
 }
