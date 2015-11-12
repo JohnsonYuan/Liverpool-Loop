@@ -52,7 +52,7 @@ namespace NppSDPlugin
 
             PluginBase.SetCommand(0, "sd edit", SDEdit, new ShortcutKey(sdEditConfig.IsCtrl, sdEditConfig.IsAlt, sdEditConfig.IsShift, sdEditConfig.ShortKey));
             PluginBase.SetCommand(1, "sd revert", SDRevert, new ShortcutKey(sdRevertConfig.IsCtrl, sdRevertConfig.IsAlt, sdRevertConfig.IsShift, sdRevertConfig.ShortKey));
-            PluginBase.SetCommand(3, "set root path", SetBranchRoot);
+            PluginBase.SetCommand(2, "set root path", SetBranchRoot);
             idMyDlg = 1;
         }
         internal static void SetToolBarIcon()
@@ -165,6 +165,9 @@ namespace NppSDPlugin
             if (PromoptSelectBranchRoot(BanchRootPath))
             {
                 Util.SdCheckoutFile(BanchRootPath, GetCurrentFilePath());
+
+                // TODO: check to see if this help
+                Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_MENUCOMMAND, 0, NppMenuCmd.IDM_FILE_RELOAD);
             }
         }
 
@@ -196,7 +199,6 @@ namespace NppSDPlugin
             // get current file path
             StringBuilder sbFilePath = new StringBuilder(Win32.MAX_PATH);
             Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLCURRENTPATH, 0, sbFilePath);
-
             return sbFilePath.ToString();
         }
 
